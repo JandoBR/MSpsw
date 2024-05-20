@@ -11,6 +11,8 @@ logging.info('Script started executing...')
 
 def busqueda(salt: str, pwd: str, start: int, end: int, socket1: socket.socket):
     logging.info("Function initialized")
+    logging.info(start)
+    logging.info(end)
     global stop_flag
     # Using 'latin-1' to avoid UnicodeDecodeError
     with open("rockyou.txt", "r", encoding='latin-1') as file:
@@ -18,7 +20,6 @@ def busqueda(salt: str, pwd: str, start: int, end: int, socket1: socket.socket):
             if stop_flag:
                 break
 
-            print(start, end)
             password = password.strip()
             logging.info(password)
             for pepper in range(start, end):
@@ -73,9 +74,17 @@ try:
                         if len(parts) == 4 and parts[1] == "search_range":
                             start = int(parts[2])
                             end = int(parts[3])
-                            thread = threading.Thread(target=busqueda, args=(
-                                salt, pwd, start, end, socket_))
-                            thread.start()
+                            threads = []
+                            chunk_size = (end - start) // 5
+
+                            for i in range(5):
+                                client_start = start + i * chunk_size
+                                client_end = client_start + chunk_size if i < 4 else end
+                                thread = threading.Thread(target=busqueda, args=(
+                                    salt, pwd, client_start, client_end, socket_))
+                                threads.append(thread)
+                                thread.start()
+
                     if message.startswith("password_found"):
                         stop_flag = True
                 except ConnectionResetError:
