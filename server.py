@@ -20,9 +20,10 @@ def client_thread(client_socket: socket.socket, client_address: tuple) -> NoRetu
         try:
             message = client_socket.recv(2048)
             if message:
-                message_str = message.decode('utf-8')
+                message_str = message.decode('latin-1')
                 print(f"<{client_address[0]}> {message_str}")
                 if message_str.startswith("password_found"):
+                    print(message_str)
                     stop_other_clients(client_socket)
             else:
                 remove(client_socket)
@@ -35,7 +36,7 @@ def client_thread(client_socket: socket.socket, client_address: tuple) -> NoRetu
 
 def stop_other_clients(client_socket: socket.socket):
     message_to_send = "password_found"
-    broadcast(message_to_send.encode('utf-8'), client_socket)
+    broadcast(message_to_send.encode('latin-1'), client_socket)
 
 
 def update_search_range() -> None:
@@ -50,7 +51,7 @@ def update_search_range() -> None:
         client_start = SEARCH_RANGE_START + i * chunk_size
         client_end = client_start + chunk_size if i < num_clients - 1 else SEARCH_RANGE_END
         client_socket.sendall(
-            f"Empieza search_range {client_start} {client_end}".encode('utf-8'))
+            f"Empieza search_range {client_start} {client_end}".encode('latin-1'))
 
 
 def broadcast(message: bytes, client_socket: socket.socket) -> NoReturn:

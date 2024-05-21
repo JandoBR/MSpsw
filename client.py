@@ -14,18 +14,16 @@ def busqueda(salt: str, pwd: str, start: int, end: int, socket1: socket.socket):
     logging.info(start)
     logging.info(end)
     global stop_flag
-    # Using 'latin-1' to avoid UnicodeDecodeError
     with open("rockyou.txt", "r", encoding='latin-1') as file:
         for password in file:
             if stop_flag:
                 break
 
             password = password.strip()
-            logging.info(password)
             for pepper in range(start, end):
                 H = SHA3_512.new()
 
-                password_b = bytes(password, "utf-8")
+                password_b = bytes(password, "latin-1")
                 H.update(password_b)
 
                 pepper_b = pepper.to_bytes(1, "big")
@@ -38,7 +36,7 @@ def busqueda(salt: str, pwd: str, start: int, end: int, socket1: socket.socket):
 
                 if pwd == pwd_h:
                     message = f"password_found, {password}"
-                    socket1.send(bytes(message, "utf-8"))
+                    socket1.send(bytes(message, "latin-1"))
                     sys.stdout.write(message)
                     sys.stdout.flush()
                     print(password)
@@ -54,7 +52,6 @@ SERVER_IP_ADDRESS = "192.168.1.2"
 SERVER_PORT = 8081
 
 socket_ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# Fixed typo: socket._connect to socket_.connect
 socket_.connect((SERVER_IP_ADDRESS, SERVER_PORT))
 
 try:
@@ -68,7 +65,7 @@ try:
                         raise ConnectionResetError
 
                     # Decode the received bytes to a string
-                    message = message.decode('utf-8')
+                    message = message.decode('latin-1')
                     if message.startswith("Empieza"):
                         parts = message.split()
                         if len(parts) == 4 and parts[1] == "search_range":
