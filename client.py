@@ -14,13 +14,13 @@ def busqueda(salt: str, pwd: str, start: int, end: int, socket1: socket.socket):
     logging.info(start)
     logging.info(end)
     global stop_flag
+    salt_b = bytes.fromhex(salt)
     with open("rockyou.txt", "r", encoding='latin-1') as file:
         for password in file:
             if stop_flag:
                 break
             password = password.strip()
             password_b = bytes(password, "latin-1")
-            salt_b = bytes.fromhex(salt)
 
             for pepper in range(start, end):
                 H = SHA3_512.new()
