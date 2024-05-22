@@ -18,18 +18,18 @@ def busqueda(salt: str, pwd: str, start: int, end: int, socket1: socket.socket):
         for password in file:
             if stop_flag:
                 break
-
             password = password.strip()
+            password_b = bytes(password, "latin-1")
+            salt_b = bytes.fromhex(salt)
+
             for pepper in range(start, end):
                 H = SHA3_512.new()
 
-                password_b = bytes(password, "latin-1")
                 H.update(password_b)
 
                 pepper_b = pepper.to_bytes(1, "big")
                 H.update(pepper_b)
 
-                salt_b = bytes.fromhex(salt)
                 H.update(salt_b)
 
                 pwd_h = H.hexdigest()
