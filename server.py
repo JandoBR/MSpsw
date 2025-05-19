@@ -3,15 +3,23 @@ from _thread import start_new_thread
 from typing import List, NoReturn
 import threading
 
-IP_ADDRESS = "192.168.1.2"
+IP_ADDRESS = "192.168.1.8"
 PORT = 8081
 MAX_CLIENTS = 10
 LIST_OF_CLIENTS: List[socket.socket] = []
 
 SERVER_SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-SEARCH_RANGE_START, SEARCH_RANGE_END = 0, 256
+SEARCH_RANGE_START, SEARCH_RANGE_END = 0, 0
 server_running = True
+
+def search_range(filename: str) -> None:
+    global SEARCH_RANGE_START, SEARCH_RANGE_END
+    SEARCH_RANGE_START = 0
+
+    with open(filename, 'rb') as f:
+        SEARCH_RANGE_END = sum(buf.count(b'\n') for buf in iter(lambda: f.read(1024 * 1024), b''))
+
 
 
 def client_thread(client_socket: socket.socket, client_address: tuple) -> NoReturn:
@@ -88,6 +96,9 @@ def handle_console_input():
 
 
 print(f"Server started at {IP_ADDRESS}:{PORT} and listening...")
+
+search_range("rockyou.txt")
+print(f"Search range updated: {SEARCH_RANGE_START} to {SEARCH_RANGE_END}")
 
 SERVER_SOCKET.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 SERVER_SOCKET.bind((IP_ADDRESS, PORT))
