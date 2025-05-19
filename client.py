@@ -16,39 +16,44 @@ def busqueda(salt: str, pwd: str, start: int, end: int, socket1: socket.socket):
     global stop_flag
     salt_b = bytes.fromhex(salt)
     with open("rockyou.txt", "r", encoding='latin-1') as file:
-        for password in file:
-            if stop_flag:
+        read_lines = file.readlines()
+
+
+    for i in range(start, end):
+        password = read_lines[i]
+        print(password)
+        if stop_flag:
+            break
+        password = password.strip()
+        password_b = bytes(password, "latin-1")
+
+        for pepper in range(0, 256):
+            H = SHA3_512.new()
+
+            H.update(password_b)
+
+            pepper_b = pepper.to_bytes(1, "big")
+            H.update(pepper_b)
+
+            H.update(salt_b)
+
+            pwd_h = H.hexdigest()
+
+            if pwd == pwd_h:
+                message = f"password_found, {password}"
+                socket1.send(bytes(message, "latin-1"))
+                sys.stdout.write(message)
+                sys.stdout.flush()
+                print(password)
+                stop_flag = True
+                logging.info('Script finished executing.')
                 break
-            password = password.strip()
-            password_b = bytes(password, "latin-1")
-
-            for pepper in range(start, end):
-                H = SHA3_512.new()
-
-                H.update(password_b)
-
-                pepper_b = pepper.to_bytes(1, "big")
-                H.update(pepper_b)
-
-                H.update(salt_b)
-
-                pwd_h = H.hexdigest()
-
-                if pwd == pwd_h:
-                    message = f"password_found, {password}"
-                    socket1.send(bytes(message, "latin-1"))
-                    sys.stdout.write(message)
-                    sys.stdout.flush()
-                    print(password)
-                    stop_flag = True
-                    logging.info('Script finished executing.')
-                    break
 
 
 username, salt, pwd = ('ballestasaj', "13ce5d97af743ba0b8f211b9c31e3f8f",
                        "a45ee47e64c9bd1210c444124ee183befc26085f7eb9c0cc927dca7f09d017edcfa6bcd0be1630b08dea659dd2d30866647175a4d69fac4a688438213244d2a0")
 
-SERVER_IP_ADDRESS = "192.168.1.2"
+SERVER_IP_ADDRESS = "192.168.1.8"
 SERVER_PORT = 8081
 
 socket_ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -72,11 +77,11 @@ try:
                             start = int(parts[2])
                             end = int(parts[3])
                             threads = []
-                            chunk_size = (end - start) // 5
+                            chunk_size = (end - start) // 4
 
-                            for i in range(5):
+                            for i in range(4):
                                 client_start = start + i * chunk_size
-                                client_end = client_start + chunk_size if i < 4 else end
+                                client_end = client_start + chunk_size if i < 3 else end
                                 thread = threading.Thread(target=busqueda, args=(
                                     salt, pwd, client_start, client_end, socket_))
                                 threads.append(thread)
@@ -84,6 +89,7 @@ try:
 
                     if message.startswith("password_found"):
                         stop_flag = True
+                        
                 except ConnectionResetError:
                     stop_flag = True
                     print("Server connection was closed. Stopping client.")
